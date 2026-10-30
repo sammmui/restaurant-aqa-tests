@@ -13,17 +13,20 @@ public sealed class AddDish(DishType type = DishType.MainCourse, string? toLocat
     public async Task PerformAsAsync(Actor actor)
     {
         var location = actor.Recall<LocationResponse>(toLocation);
+        var waiter = await actor.AsksForAsync(new TheWaiterSession());
         var api = new DishesApi(actor.UsingTheApi());
         var response = actor.TheLastResponse();
 
-        await response.CaptureAsync(await api.CreateDishAsync(SampleDataFactory.CreateDishRequest([location.Id], type)));
+        var request = SampleDataFactory.CreateDishRequest([location.Id], type) with
+        {
+            Name = $"{SampleDataFactory.Prefix}{Guid.NewGuid():N}",
+        };
+        await response.CaptureAsync(await api.CreateDishAsync(request));
         if (!response.Succeeded)
             throw new InvalidOperationException($"Adding the dish failed with {response.Status}: {response.Body}");
-
         var dish = response.Json<DishResponse>();
         actor.Remember(dish);
 
-        var waiter = await actor.AsksForAsync(new TheWaiterSession());
         actor.Recall<CleanupScope>().TrackDelete(
             $"dish:{dish.Id}",
             () => api.DeleteDishAsync(dish.Id, force: true, bearerToken: waiter.IdToken));

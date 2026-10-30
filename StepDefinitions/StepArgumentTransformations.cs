@@ -32,9 +32,21 @@ public static class StepArgumentTransformations
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 
+    [StepArgumentTransformation(Name = "name_match", Regex = "(full name|name prefix)")]
+    public static DishNameMatch ToDishNameMatch(string value) => value switch
+    {
+        "full name" => DishNameMatch.FullName,
+        "name prefix" => DishNameMatch.NamePrefix,
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
+    };
+
     [StepArgumentTransformation(Name = "price_order", Regex = "(from cheapest to most expensive|from most expensive to cheapest)")]
     public static SortDirection ToPriceOrder(string value) =>
         value == "from cheapest to most expensive" ? SortDirection.Ascending : SortDirection.Descending;
+
+    [StepArgumentTransformation(Name = "popularity_order", Regex = "(from least popular to most popular|from most popular to least popular)")]
+    public static SortDirection ToPopularityOrder(string value) =>
+        value == "from least popular to most popular" ? SortDirection.Ascending : SortDirection.Descending;
 
     [StepArgumentTransformation(Name = "field", Regex = "(first name|last name|email address|password confirmation|password)")]
     public static InputField ToField(string value) => value switch
